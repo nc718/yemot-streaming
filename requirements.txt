@@ -1,4 +1,4 @@
-google-genai==1.7.0
+google-genai>=2.26.0
 flask==3.0.0
 requests
 numpy
