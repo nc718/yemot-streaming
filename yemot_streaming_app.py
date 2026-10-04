@@ -60,9 +60,6 @@ class YemotRealtimeStreamer:
         self.model = "gemini-3.5-transcribe-live"
         self.config = types.LiveConnectConfig(
             response_modalities=["TEXT"],
-            input_audio_transcription=types.AudioTranscriptionConfig(
-                language_codes=[],  # Automatic language detection
-            ),
         )
     
     def get_latest_recording(self) -> Optional[str]:
