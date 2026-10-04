@@ -12,5 +12,5 @@ COPY yemot_streaming_app.py .
 # חשיפת הפורט
 EXPOSE 5000
 
-# הפעלת האפליקציה
-CMD ["python", "yemot_streaming_app.py"]
+# הפעלת האפליקציה עם gunicorn
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "1", "yemot_streaming_app:app"]
