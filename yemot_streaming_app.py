@@ -60,6 +60,7 @@ class YemotRealtimeStreamer:
         self.model = "gemini-3.5-transcribe-live"
         self.config = types.LiveConnectConfig(
             response_modalities=["TEXT"],
+            input_audio_transcription=types.AudioTranscriptionConfig(),
         )
     
     def get_latest_recording(self) -> Optional[str]:
@@ -147,8 +148,7 @@ class YemotRealtimeStreamer:
         try:
             print(f"שולח אודיו: {len(audio_data)} bytes, sample_rate: {sample_rate}")
             await self.session.send_realtime_input(
-                audio_data=audio_data,
-                sample_rate=sample_rate
+                audio=types.Blob(data=audio_data, mime_type='audio/pcm;rate=16000')
             )
             print("אודיו נשלח בהצלחה")
         except Exception as e:
