@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: yemot-streaming
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python yemot_streaming_app.py
+    envVars:
+      - key: YMOT_TOKEN
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
