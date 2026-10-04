@@ -145,12 +145,14 @@ class YemotRealtimeStreamer:
             return
         
         try:
+            print(f"שולח אודיו: {len(audio_data)} bytes, sample_rate: {sample_rate}")
             await self.session.send_realtime_input(
                 audio_data=audio_data,
                 sample_rate=sample_rate
             )
+            print("אודיו נשלח בהצלחה")
         except Exception as e:
-            pass
+            print(f"שגיאה בשליחת אודיו: {e}")
     
     async def receive_transcription(self):
         """
