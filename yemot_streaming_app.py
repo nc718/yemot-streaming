@@ -166,7 +166,7 @@ class YemotRealtimeStreamer:
                     if server_content:
                         # בדיקת interim_input_transcription
                         if hasattr(server_content, 'interim_input_transcription') and server_content.interim_input_transcription:
-                            pass
+                            print(f"תמלול זמני: {server_content.interim_input_transcription.text}")
                         # בדיקת input_transcription
                         elif hasattr(server_content, 'input_transcription') and server_content.input_transcription:
                             transcription_text = server_content.input_transcription.text
@@ -178,13 +178,13 @@ class YemotRealtimeStreamer:
         """
         מפעיל סטרימינג בזמן אמת
         """
-        pass
+        print("מפעיל סטרימינג בזמן אמת...")
         self.is_running = True
         
         # פתיחת session אחד לכל הזמן
         async with self.client.aio.live.connect(model=self.model, config=self.config) as session:
             self.session = session
-            pass
+            print("התחבר ל-Gemini Live API")
             
             # הפעלת קבלת תמלול ברקע
             transcription_task = None
@@ -196,15 +196,15 @@ class YemotRealtimeStreamer:
             if latest_file:
                 self.current_file = latest_file
                 self.last_wav_size = 0
-                pass
+                print(f"הקלטה נבחרה: {latest_file}")
             else:
-                pass
+                print("לא נמצאה הקלטה")
                 self.is_running = False
                 return
             
             try:
                 while self.is_running:
-                    pass
+                    print(f"בודק תוספות... (קובץ: {self.current_file})")
                     
                     # הורדת הקובץ הנוכחי
                     wav_data = self.download_file(self.current_file)
@@ -225,13 +225,13 @@ class YemotRealtimeStreamer:
                             no_change_count = 0
                         else:
                             no_change_count += 1
-                            pass
+                            print("אין תוספת")
                             
                             if no_change_count >= max_no_change:
-                                pass
+                                print("סימון סוף סטרים...")
                                 await self.session.send_realtime_input(audio_stream_end=True)
                                 await asyncio.sleep(2)
-                                pass
+                                print(f"תמלול סופי: {self.final_transcription if self.final_transcription else 'לא התקבל'}")
                                 self.is_running = False
                                 break
                     
