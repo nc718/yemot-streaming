@@ -165,7 +165,7 @@ class YemotRealtimeStreamer:
                     if server_content:
                         # בדיקת interim_input_transcription
                         if hasattr(server_content, 'interim_input_transcription') and server_content.interim_input_transcription:
-                            pass
+                            print(f"תמלול זמני: {server_content.interim_input_transcription.text}")
                         # בדיקת input_transcription
                         elif hasattr(server_content, 'input_transcription') and server_content.input_transcription:
                             transcription_text = server_content.input_transcription.text
@@ -181,11 +181,13 @@ class YemotRealtimeStreamer:
         """
         מפעיל סטרימינג בזמן אמת
         """
+        print("מפעיל סטרימינג בזמן אמת...")
         self.is_running = True
         
         # פתיחת session אחד לכל הזמן
         async with self.client.aio.live.connect(model=self.model, config=self.config) as session:
             self.session = session
+            print("✓ התחבר ל-Gemini Live API")
             
             # הפעלת קבלת תמלול ברקע
             transcription_task = None
@@ -197,7 +199,9 @@ class YemotRealtimeStreamer:
             if latest_file:
                 self.current_file = latest_file
                 self.last_wav_size = 0
+                print(f"הקלטה נבחרה: {latest_file}")
             else:
+                print("לא נמצאה הקלטה")
                 self.is_running = False
                 return
             
@@ -211,22 +215,29 @@ class YemotRealtimeStreamer:
                         new_bytes = wav_size - self.last_wav_size
                         
                         if new_bytes > 0 or self.last_wav_size == 0:
+                            print(f"בודק תוספות... (קובץ: {self.current_file})")
                             pcm_data, sample_rate = self.convert_wav_to_pcm(wav_data, self.last_wav_size)
                             await self.send_audio_chunk(pcm_data, sample_rate)
                             self.last_wav_size = wav_size
+                            print(f"✓ נשלחו {wav_size} bytes")
                             no_change_count = 0
                             
                             if transcription_task is None:
                                 transcription_task = asyncio.create_task(self.receive_transcription())
                         elif wav_size < self.last_wav_size:
+                            print(f"קובץ השתנה, עדכון ל-{wav_size}")
                             self.last_wav_size = wav_size
                             no_change_count = 0
                         else:
+                            print("אין תוספת")
                             no_change_count += 1
                             
                             if no_change_count >= max_no_change:
+                                print("סימון סוף סטרים...")
                                 await self.session.send_realtime_input(audio_stream_end=True)
+                                print("✓ סוף סטרים סומן")
                                 await asyncio.sleep(2)
+                                print("תמלול סופי:", self.final_transcription if self.final_transcription else "לא התקבל")
                                 self.is_running = False
                                 break
                     
