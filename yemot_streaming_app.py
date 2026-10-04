@@ -169,7 +169,11 @@ class YemotRealtimeStreamer:
                         # בדיקת input_transcription
                         elif hasattr(server_content, 'input_transcription') and server_content.input_transcription:
                             transcription_text = server_content.input_transcription.text
-                            self.final_transcription = transcription_text
+                            # צבירת כל התמלולים
+                            if self.final_transcription:
+                                self.final_transcription += " " + transcription_text
+                            else:
+                                self.final_transcription = transcription_text
         except Exception as e:
             pass
     
