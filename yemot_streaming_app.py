@@ -145,13 +145,11 @@ class YemotRealtimeStreamer:
             return
         
         try:
-            print(f"שולח אודיו: {len(audio_data)} bytes, sample_rate: {sample_rate}")
             await self.session.send_realtime_input(
                 audio=types.Blob(data=audio_data, mime_type='audio/pcm;rate=16000')
             )
-            print("אודיו נשלח בהצלחה")
         except Exception as e:
-            print(f"שגיאה בשליחת אודיו: {e}")
+            pass
     
     async def receive_transcription(self):
         """
@@ -167,7 +165,7 @@ class YemotRealtimeStreamer:
                     if server_content:
                         # בדיקת interim_input_transcription
                         if hasattr(server_content, 'interim_input_transcription') and server_content.interim_input_transcription:
-                            print(f"תמלול זמני: {server_content.interim_input_transcription.text}")
+                            pass
                         # בדיקת input_transcription
                         elif hasattr(server_content, 'input_transcription') and server_content.input_transcription:
                             transcription_text = server_content.input_transcription.text
@@ -179,13 +177,11 @@ class YemotRealtimeStreamer:
         """
         מפעיל סטרימינג בזמן אמת
         """
-        print("מפעיל סטרימינג בזמן אמת...")
         self.is_running = True
         
         # פתיחת session אחד לכל הזמן
         async with self.client.aio.live.connect(model=self.model, config=self.config) as session:
             self.session = session
-            print("התחבר ל-Gemini Live API")
             
             # הפעלת קבלת תמלול ברקע
             transcription_task = None
@@ -197,15 +193,12 @@ class YemotRealtimeStreamer:
             if latest_file:
                 self.current_file = latest_file
                 self.last_wav_size = 0
-                print(f"הקלטה נבחרה: {latest_file}")
             else:
-                print("לא נמצאה הקלטה")
                 self.is_running = False
                 return
             
             try:
                 while self.is_running:
-                    print(f"בודק תוספות... (קובץ: {self.current_file})")
                     
                     # הורדת הקובץ הנוכחי
                     wav_data = self.download_file(self.current_file)
@@ -226,13 +219,10 @@ class YemotRealtimeStreamer:
                             no_change_count = 0
                         else:
                             no_change_count += 1
-                            print("אין תוספת")
                             
                             if no_change_count >= max_no_change:
-                                print("סימון סוף סטרים...")
                                 await self.session.send_realtime_input(audio_stream_end=True)
                                 await asyncio.sleep(2)
-                                print(f"תמלול סופי: {self.final_transcription if self.final_transcription else 'לא התקבל'}")
                                 self.is_running = False
                                 break
                     
@@ -252,7 +242,7 @@ def start_streaming():
     global streamer
     
     if streamer is not None and streamer.is_running:
-        return jsonify({'status': 'error', 'message': 'הסטרימינג כבר פעיל'})
+        return "error: הסטרימינג כבר פעיל"
     
     streamer = YemotRealtimeStreamer(YMOT_TOKEN, GEMINI_API_KEY)
     
@@ -276,21 +266,12 @@ def get_status():
     global streamer
     
     if streamer is None:
-        return jsonify({'status': 'idle', 'message': 'לא פעיל'})
+        return "idle"
     
     if streamer.is_running:
-        return jsonify({
-            'status': 'running',
-            'message': 'סטרימינג פעיל',
-            'current_file': streamer.current_file,
-            'final_transcription': streamer.final_transcription
-        })
+        return "running"
     else:
-        return jsonify({
-            'status': 'completed',
-            'message': 'הסטרימינג הסתיים',
-            'final_transcription': streamer.final_transcription
-        })
+        return "completed"
 
 @app.route('/transcription', methods=['GET'])
 def get_transcription():
@@ -300,11 +281,9 @@ def get_transcription():
     global streamer
     
     if streamer is None:
-        return jsonify({'status': 'error', 'message': 'לא פעיל'})
+        return "error: לא פעיל"
     
-    return jsonify({
-        'transcription': streamer.final_transcription if streamer.final_transcription else 'לא התקבל'
-    })
+    return streamer.final_transcription if streamer.final_transcription else 'לא התקבל'
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000)
